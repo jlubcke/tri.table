@@ -745,9 +745,7 @@ def test_cell_template():
             </thead>
             <tbody>
                 <tr class="row1">
-                    <td>
-                        test_cell_template.html contents
-                    </td>
+                    Custom rendered: sentinel
                 </tr>
             </tbody>
         </table>""")
@@ -777,19 +775,29 @@ def test_no_header_template():
 def test_row_template():
     class TestTable(NoSortTable):
         foo = Column()
+        bar = Column()
 
         class Meta:
             row__template = lambda table: 'test_table_row.html'
 
-    data = [Struct(foo="sentinel")]
+    data = [Struct(foo="sentinel", bar="schmentinel")]
 
     verify_table_html(TestTable(data=data), """
         <table class="listview">
             <thead>
-                <tr><th class="first_column subheader"> Foo </th></tr>
+                <tr>
+                  <th class="first_column subheader"> Foo </th>
+                  <th class="first_column subheader"> Bar </th>
+                </tr>
             </thead>
             <tbody>
-                sentinel
+
+             All columns:
+             <td> sentinel </td>
+             <td> schmentinel </td>
+
+             One by name:
+              <td> sentinel </td>
             </tbody>
         </table>""")
 
