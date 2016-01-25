@@ -453,7 +453,6 @@ class BoundRow(NamedStruct):
         bound_column = self.table.bound_column_by_name.get(name)
         if bound_column is not None:
             return BoundCell(bound_column=bound_column, bound_row=self)
-        return super(BoundRow, self).__getitem__(name)
 
 
 class BoundCell(Struct):
