@@ -18,8 +18,7 @@ from django.utils.html import conditional_escape, format_html
 from django.utils.safestring import mark_safe
 from django.db.models import QuerySet
 from six import string_types
-from tri.declarative import declarative, creation_ordered, with_meta, setdefaults, evaluate_recursive, evaluate, getattr_path, collect_namespaces, extract_subkeys, sort_after, LAST, setdefaults_path, \
-    dispatch, setattr_path, EMPTY
+from tri.declarative import declarative, creation_ordered, with_meta, setdefaults, evaluate_recursive, evaluate, getattr_path, collect_namespaces, sort_after, LAST, setdefaults_path, dispatch, EMPTY
 from tri.form import Field, Form, member_from_model, expand_member, create_members_from_model
 from tri.named_struct import NamedStructField, NamedStruct
 from tri.struct import Struct, Frozen, merged
@@ -135,6 +134,7 @@ class ColumnBase(NamedStruct):
     sortable = NamedStructField(default=True)
     group = NamedStructField()
     auto_rowspan = NamedStructField(default=False)
+    """ :type: bool """
     cell = NamedStructField()
     model = NamedStructField()
     choices = NamedStructField()
@@ -440,7 +440,7 @@ class BoundRow(object):
         """ :type : object """
         self.row_index = row_index
 
-        args = Struct(evaluate_recursive(extract_subkeys(table.Meta, 'row'), table=table, row=row))
+        args = Struct(evaluate_recursive(table.kwargs.row, table=table, row=row))
         self.template = args.template
         self.attrs = args.attrs
 
@@ -454,7 +454,7 @@ class BoundRow(object):
 
     def render_attrs(self):
         attrs = self.attrs.copy()
-        attrs['class'] = attrs['class'].copy()
+        attrs['class'] = attrs['class'].copy() if isinstance(attrs['class'], dict) else {k: True for k in attrs['class'].split(' ')}
         attrs['class'].setdefault('row%s' % (self.row_index % 2 + 1), True)
         pk = getattr(self.row, 'pk', None)
         if pk is not None:
@@ -526,6 +526,26 @@ class BoundCell(object):
         return "<%s column=%s row=%s>" % (self.__class__.__name__, self.bound_column.column, self.bound_row.row)  # pragma: no cover
 
 
+class TableKwargs(NamedStruct):
+    attrs = NamedStructField()
+    row = NamedStructField()
+    model = NamedStructField()
+    instance = NamedStructField()
+
+    query = NamedStructField()
+    query_error = NamedStructField()
+
+    bulk = NamedStructField()
+    bulk_filter = NamedStructField()
+    bulk_exclude = NamedStructField()
+    sortable = NamedStructField()
+    links = NamedStructField()
+    filter = NamedStructField()
+    header = NamedStructField()
+
+    post_validation = NamedStructField()
+
+
 @declarative(Column, 'columns_dict')
 @with_meta
 class Table(object):
@@ -543,23 +563,24 @@ class Table(object):
 
     """
 
-    class Meta:
-        bulk_filter = {}
-        bulk_exclude = {}
-        sortable = True
-        attrs = Struct()
-        attrs__class__listview = True
-        row__attrs = Struct()
-        row__template = None
-        filter__template = 'tri_query/form.html'
-        header__template = 'tri_table/table_header_rows.html'
-        links__template = 'tri_table/links.html'
-
-        model = None
-
+    @dispatch(
+        bulk_filter={},
+        bulk_exclude={},
+        sortable=True,
+        attrs=EMPTY,
+        attrs__class__listview=True,
+        row__attrs__class=EMPTY,
+        row__template=None,
+        filter__template='tri_query/form.html',
+        header__template='tri_table/table_header_rows.html',
+        links__template='tri_table/links.html',
+        model=None,
+        query=EMPTY,
+        bulk=EMPTY,
+    )
     def __init__(self, data=None, request=None, columns=None, columns_dict=None, **kwargs):
         """
-        :param data: a list of QuerySet of objects
+        :param data: a list or QuerySet of objects
         :param columns: (use this only when not using the declarative style) a list of Column objects
         :param attrs: dict of strings to string/callable of HTML attributes to apply to the table
         :param row__attrs: dict of strings to string/callable of HTML attributes to apply to the row. Callables are passed the row as argument.
@@ -570,19 +591,13 @@ class Table(object):
         :param filter__template:
         :param header__template:
         :param links__template:
-
         """
-
-        self._has_prepared = False
 
         if data is None:
             assert 'model' in kwargs and kwargs['model'] is not None
             data = kwargs['model'].objects.all()
 
-        self.data = data
-        self.request = request
-
-        if isinstance(self.data, QuerySet):
+        if isinstance(data, QuerySet):
             kwargs['model'] = data.model
 
         def generate_columns():
@@ -591,26 +606,36 @@ class Table(object):
             for name, column in columns_dict.items():
                 dict.__setitem__(column, 'name', name)
                 yield column
-        self.columns = sort_after(list(generate_columns()))
-        """:type : list of Column"""
+        columns = sort_after(list(generate_columns()))
 
-        assert len(self.columns) > 0, 'columns must be specified. It is only set to None to make linting tools not give false positives on the declarative style'
+        assert len(columns) > 0, 'columns must be specified. It is only set to None to make linting tools not give false positives on the declarative style'
 
-        self.bound_columns = None
-        self.shown_bound_columns = None
-        self.bound_column_by_name = None
+        self.data = data
+        self.request = request
+        self.columns = columns
+        """ :type : list of Column """
+        self.kwargs = TableKwargs(**kwargs)
+        """ :type : TableKwargs """
 
-        self.Meta = self.get_meta()
-        self.Meta.update(**kwargs)
-
-        self.header_levels = None
         self.query = None
+        """ :type : tri.query.Query """
         self.query_form = None
+        """ :type : tri.form.Form """
         self.query_error = None
-        self.bulk_form = None
+        """ :type : list of str """
 
-        self.query_kwargs = extract_subkeys(kwargs, 'query')
-        self.bulk_kwargs = extract_subkeys(kwargs, 'bulk')
+        self.bulk_form = None
+        """ :type : tri.form.Form """
+        self.bound_columns = None
+        """ :type : list of BoundColumn """
+        self.shown_bound_columns = None
+        """ :type : list of BoundColumn """
+        self.bound_column_by_name = None
+        """ :type: dict[str, BoundColumn] """
+        self._has_prepared = False
+        """ :type: bool """
+        self.header_levels = None
+
 
     def _prepare_auto_rowspan(self):
         auto_rowspan_columns = [column for column in self.shown_bound_columns if column.auto_rowspan]
@@ -638,23 +663,9 @@ class Table(object):
     def _prepare_evaluate_members(self):
         self.shown_bound_columns = [bound_column for bound_column in self.bound_columns if bound_column.show]
 
-        self.Meta = evaluate_recursive(self.Meta, table=self)
+        self.kwargs = evaluate_recursive(self.kwargs, table=self)
 
-        if 'class' in self.Meta.attrs and isinstance(self.Meta.attrs['class'], string_types):
-            self.Meta.attrs['class'] = {k: True for k in self.Meta.attrs['class'].split(' ')}
-        else:
-            self.Meta.attrs['class'] = {}
-        self.Meta.attrs.update(extract_subkeys(self.Meta, 'attrs'))
-        self.Meta.attrs = collect_namespaces(self.Meta.attrs)
-
-        if 'class' in self.Meta.row__attrs and isinstance(self.Meta.row__attrs['class'], string_types):
-            self.Meta.row__attrs['class'] = {k: True for k in self.Meta.row__attrs['class'].split(' ')}
-        else:
-            self.Meta.row__attrs['class'] = {}
-        self.Meta.row__attrs.update(extract_subkeys(self.Meta, 'row__attrs'))
-        self.Meta.row__attrs = collect_namespaces(self.Meta.row__attrs)
-
-        if not self.Meta.sortable:
+        if not self.kwargs.sortable:
             for bound_column in self.bound_columns:
                 bound_column.sortable = False
 
@@ -675,7 +686,7 @@ class Table(object):
                     if not settings.DEBUG:
                         # We should crash on invalid sort commands in DEV, but just ignore in PROD
                         # noinspection PyProtectedMember
-                        valid_sort_fields = {x.name for x in self.Meta.model._meta.fields}
+                        valid_sort_fields = {x.name for x in self.kwargs.model._meta.fields}
                         order_args = [order_arg for order_arg in order_args if order_arg.split('__', 1)[0] in valid_sort_fields]
                     order_args = ["%s%s" % (is_desc and '-' or '', x) for x in order_args]
                     self.data = self.data.order_by(*order_args)
@@ -743,7 +754,7 @@ class Table(object):
         headers = self._prepare_headers()
         self._prepare_auto_rowspan()
 
-        if self.Meta.model:
+        if self.kwargs.model:
 
             def generate_variables():
                 for column in self.bound_columns:
@@ -755,7 +766,7 @@ class Table(object):
                                 name=column.name,
                                 gui__label=column.display_name,
                                 attr=column.attr,
-                                model=column.table.Meta.model,
+                                model=column.table.kwargs.model,
                             ), {
                                 'class': Variable,
                             }
@@ -766,7 +777,7 @@ class Table(object):
             self.query = Query(
                 request=request,
                 variables=variables,
-                **self.query_kwargs
+                **self.kwargs.query
             )
             self.query_form = self.query.form(request) if self.query.variables else None
 
@@ -788,7 +799,7 @@ class Table(object):
                                 attr=column.attr,
                                 required=False,
                                 empty_choice_tuple=(None, '', '---', True),
-                                model=self.Meta.model,
+                                model=self.kwargs.model,
                             ), {
                                 'class': Field.from_model,
                             }
@@ -801,7 +812,7 @@ class Table(object):
             self.bulk_form = Form(
                 data=request.POST,
                 fields=bulk_fields,
-                **self.bulk_kwargs) if bulk_fields else None
+                **self.kwargs.bulk) if bulk_fields else None
 
         return headers, self.header_levels
 
@@ -810,7 +821,7 @@ class Table(object):
             yield BoundRow(table=self, row=row, row_index=i)
 
     def render_attrs(self):
-        attrs = self.Meta.attrs.copy()
+        attrs = self.kwargs.attrs.copy()
         return render_attrs(attrs)
 
     def render_tbody(self):
@@ -978,8 +989,8 @@ def render_table(request,
 
     kwargs = collect_namespaces(kwargs)
 
-    if table is None or isinstance(table, dict):
-        table_kwargs = table if isinstance(table, dict) else kwargs.pop('table', {})
+    if table is None:
+        table_kwargs = kwargs.pop('table', {})
         if 'model' not in table_kwargs:
             table_kwargs['model'] = table_kwargs['data'].model
         table = Table.from_model(**table_kwargs)
@@ -994,10 +1005,10 @@ def render_table(request,
         pks = [key[len('pk_'):] for key in request.POST if key.startswith('pk_')]
 
         if table.bulk_form.is_valid():
-            table.Meta.model.objects.all() \
+            table.kwargs.model.objects.all() \
                 .filter(pk__in=pks) \
-                .filter(**table.Meta.bulk_filter) \
-                .exclude(**table.Meta.bulk_exclude) \
+                .filter(**table.kwargs.bulk_filter) \
+                .exclude(**table.kwargs.bulk_exclude) \
                 .update(**{field.name: field.value for field in table.bulk_form.fields if field.value is not None and field.value is not ''})
 
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
