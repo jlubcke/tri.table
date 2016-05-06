@@ -27,7 +27,7 @@ def explicit_table():
         Column.number(name="bar"),
     ]
 
-    return Table(data=get_data(), columns=columns, attrs=lambda table: {'class': 'listview', 'id': 'table_id'})
+    return Table(data=get_data(), columns=columns, attrs__class__listview=True, attrs__id='table_id')
 
 
 def declarative_table():
@@ -35,10 +35,8 @@ def declarative_table():
     class TestTable(Table):
 
         class Meta:
-            attrs = {
-                'class': lambda table: 'listview',
-                'id': lambda table: 'table_id',
-            }
+            attrs__class__listview = lambda table: True
+            attrs__id = lambda table: 'table_id'
 
         foo = Column()
         bar = Column.number()
@@ -494,14 +492,10 @@ def test_attr():
 def test_attrs():
     class TestTable(NoSortTable):
         class Meta:
-            attrs = {
-                'class': 'classy',
-                'foo': lambda table: 'bar'
-            }
-            row__attrs = {
-                'class': 'classier',
-                'foo': lambda table, row: "barier"
-            }
+            attrs__class = 'classy'
+            attrs__foo = lambda table: 'bar'
+            row__attrs__class = 'classier'
+            row__attrs__foo = lambda table, row: "barier"
 
         yada = Column()
 
