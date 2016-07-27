@@ -1,4 +1,4 @@
-from tri.declarative import setdefaults
+from tri.declarative import setdefaults, setdefaults_path
 
 
 def setup_db_compat():
@@ -29,15 +29,24 @@ def setup_db_compat_django():
         register_column_factory(IntegerField, lambda model_field, **kwargs: Column.integer(**kwargs))
         register_column_factory(AutoField, lambda model_field, **kwargs: Column.integer(**setdefaults(kwargs, dict(show=False))))
         register_column_factory(ManyToOneRel, None)
-        register_column_factory(ManyToManyField, lambda model_field, **kwargs: Column.multi_choice_queryset(**setdefaults(kwargs, dict(choices=model_field.rel.to._default_manager.all()))))
+
+        def many_to_many_factory(model_field, model, **kwargs):
+            del model
+            return Column.multi_choice_queryset(**setdefaults_path(kwargs, dict(
+                choices=model_field.rel.to._default_manager.all(),
+                model=model_field.rel.to,
+            )))
+
+        register_column_factory(ManyToManyField, many_to_many_factory)
         register_column_factory(ManyToManyRel, None)
         # register_field_factory(ManyToManyRel_Related, None)
 
-        def foreign_key_factory(model_field, **kwargs):
+        def foreign_key_factory(model_field, model, **kwargs):
+            del model
             setdefaults(kwargs, dict(
-                choices=model_field.foreign_related_fields[0].model.objects.all()
+                choices=model_field.foreign_related_fields[0].model.objects.all(),
+                model=model_field.foreign_related_fields[0].model,
             ))
-            kwargs['model'] = model_field.foreign_related_fields[0].model
             return Column.choice_queryset(**kwargs)
 
         register_column_factory(ForeignKey, foreign_key_factory)
