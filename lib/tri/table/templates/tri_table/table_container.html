@@ -6,6 +6,7 @@
 
     {% if bulk_form %}
         <table {{ bulk_form.render_attrs }}>
+            <input type="hidden" name="_all_pks_" value="0"/>
             {{ bulk_form }}
 
             <tr>

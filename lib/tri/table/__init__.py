@@ -1157,12 +1157,15 @@ class Table(RefinableObject):
                 return handler(table=self, key=remaining_key, value=value)
 
     def bulk_queryset(self):
-        pks = [key[len('pk_'):] for key in self.request.POST if key.startswith('pk_')]
-
-        return self.model.objects.all() \
-            .filter(pk__in=pks) \
+        queryset = self.model.objects.all() \
             .filter(**self.bulk_filter) \
             .exclude(**self.bulk_exclude)
+
+        if self.request.POST.get('_all_pks_', '0') == '1':
+            return queryset
+        else:
+            pks = [key[len('pk_'):] for key in self.request.POST if key.startswith('pk_')]
+            return queryset.filter(pk__in=pks)
 
 
 class Link(tri_form_Link):

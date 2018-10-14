@@ -735,6 +735,16 @@ def test_bulk_edit():
         (4, 4, u''),
     ]
 
+    # Test edit all feature
+    render_table(request=RequestFactory(HTTP_REFERER='/').post("/", dict(a='11', b='changed2', _all_pks_='1')), table=TestTable(data=Foo.objects.all()))
+
+    assert [(x.pk, x.a, x.b) for x in Foo.objects.all()] == [
+        (1, 11, u'changed2'),
+        (2, 11, u'changed2'),
+        (3, 11, u'changed2'),
+        (4, 11, u'changed2'),
+    ]
+
 
 @pytest.mark.django_db
 def test_query():
