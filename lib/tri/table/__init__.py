@@ -401,12 +401,14 @@ def column_shortcut_run(is_report=False, show=True, call_target=None, **kwargs):
 Column.run = staticmethod(column_shortcut_run)
 
 
+SELECT_DISPLAY_NAME = '<i class="fa fa-check-square-o" onclick="javascript:Array.prototype.forEach.call(this.parentNode.parentNode.parentNode.parentNode.querySelector(\'tbody\').querySelectorAll(\'.checkbox\'), function(el, i) {el.checked = !el.checked;})"></i>'
+
 @shortcut
 @dispatch(
     call_target=Column,
     name='__select__',
     title='Select all',
-    display_name=mark_safe('<i class="fa fa-check-square-o"></i>'),
+    display_name=mark_safe(SELECT_DISPLAY_NAME),
     sortable=False,
     attrs__class__thin=True,
     attrs__class__nopad=True,

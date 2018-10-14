@@ -18,7 +18,7 @@ from tri.query import Variable
 from tests.helpers import verify_table_html
 from tests.models import Foo, Bar, Baz
 
-from tri.table import Struct, Table, Column, Link, render_table, render_table_to_response, register_cell_formatter, yes_no_formatter
+from tri.table import Struct, Table, Column, Link, render_table, render_table_to_response, register_cell_formatter, yes_no_formatter, SELECT_DISPLAY_NAME
 
 
 def get_data():
@@ -595,7 +595,7 @@ def test_column_presets():
                     <th class="first_column subheader thin" title="Download" />
                     <th class="first_column subheader thin" title="Run"> Run </th>
                     <th class="first_column nopad subheader thin" title="Select all">
-                        <i class="fa fa-check-square-o" />
+                        {}
                     </th>
                     <th class="first_column subheader"> Boolean </th>
                     <th class="first_column subheader"> Link </th>
@@ -614,7 +614,7 @@ def test_column_presets():
                     <td class="rj"> 123 </td>
                 </tr>
             </tbody>
-        </table>""")
+        </table>""".format(SELECT_DISPLAY_NAME))
 
 
 @pytest.mark.django_db
