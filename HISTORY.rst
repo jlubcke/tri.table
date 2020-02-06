@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+8.4.0 (----------)
+~~~~~~~~~~~~~~~~~~
+
+* Fix bulk form missing requests attribute. (Failing on ajax selects)
+
+
 8.3.0 (2020-01-09)
 ~~~~~~~~~~~~~~~~~~
 

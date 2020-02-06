@@ -1351,6 +1351,7 @@ class Table(RefinableObject):
                 bulk_fields.append(self.get_meta().form_class.get_meta().member_class.hidden(name='_all_pks_', attr=None, initial='0', required=False, template='tri_form/input.html'))
 
                 self._bulk_form = self.get_meta().form_class(
+                    request=self.request,
                     data=self.request.POST,
                     fields=bulk_fields,
                     name=self.name,
