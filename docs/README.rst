@@ -1,3 +1,12 @@
+.. warning::
+    tri.table is end of life. It has been merged into `iommi <http://iommi.rocks>`_.
+
+    iommi is backwards incompatible but the porting effort should be fairly mild,
+    the biggest changes are that `show` is now called `include`, tri.query's
+    `Variable` is renamed to `Filter` and plural is used consistently for
+    containers (so `column__foo` is `columns__foo` in iommi).
+
+
 tri.table
 ==========
 
