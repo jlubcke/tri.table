@@ -6,6 +6,7 @@
     :target: https://codecov.io/github/TriOptima/tri.table?branch=master
 
 .. warning::
+
     tri.table is end of life. It has been merged into `iommi <http://iommi.rocks>`_.
 
     iommi is backwards incompatible but the porting effort should be fairly mild,
