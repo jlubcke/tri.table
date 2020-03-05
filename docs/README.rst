@@ -1,12 +1,3 @@
-.. warning::
-    tri.table is end of life. It has been merged into `iommi <http://iommi.rocks>`_.
-
-    iommi is backwards incompatible but the porting effort should be fairly mild,
-    the biggest changes are that `show` is now called `include`, tri.query's
-    `Variable` is renamed to `Filter` and plural is used consistently for
-    containers (so `column__foo` is `columns__foo` in iommi).
-
-
 tri.table
 ==========
 
@@ -17,6 +8,14 @@ tri.table
 .. image:: https://codecov.io/github/TriOptima/tri.table/coverage.svg?branch=master
     :target: https://codecov.io/github/TriOptima/tri.table?branch=master
 
+.. warning::
+
+    tri.table is end of life. It has been merged into `iommi <http://iommi.rocks>`_.
+
+    iommi is backwards incompatible but the porting effort should be fairly mild,
+    the biggest changes are that `show` is now called `include`, tri.query's
+    `Variable` is renamed to `Filter` and plural is used consistently for
+    containers (so `column__foo` is `columns__foo` in iommi).
 
 tri.table is a library to make full featured HTML tables easily:
 
