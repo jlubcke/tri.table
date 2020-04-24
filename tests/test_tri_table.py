@@ -10,6 +10,7 @@ from collections import defaultdict
 
 import django
 import pytest
+import tri_declarative
 from django.db.models import QuerySet
 from django.http import HttpResponse
 from django.template import Template
@@ -412,6 +413,7 @@ def test_link():
         </table>""")
 
 
+@pytest.mark.skipif(not tri_declarative.__version__.startswith('4'), reason='Only available on tri.declarative 4.x')
 def test_deprecated_css_class():
     with pytest.warns(DeprecationWarning):
         class TestTable(NoSortTable):
