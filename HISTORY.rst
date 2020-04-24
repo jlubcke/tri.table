@@ -6,6 +6,8 @@ Changelog
 
 * Fix bulk form missing requests attribute. (Failing on ajax selects)
 
+* Upped dependency tri.declarative to 5.x
+
 
 8.3.0 (2020-01-09)
 ~~~~~~~~~~~~~~~~~~
