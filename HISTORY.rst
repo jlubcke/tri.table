@@ -1,7 +1,13 @@
 Changelog
 ---------
 
-8.4.0 (----------)
+8.5.0 (----------)
+~~~~~~~~~~~~~~~~~~
+
+* Include tri.struct 4.x as possible requirement
+
+
+8.4.0 (2020-04-24)
 ~~~~~~~~~~~~~~~~~~
 
 * Fix bulk form missing requests attribute. (Failing on ajax selects)
