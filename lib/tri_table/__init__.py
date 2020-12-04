@@ -1136,11 +1136,6 @@ class Table(RefinableObject):
                 if isinstance(self.data, list):
                     order_by_on_list(self.data, order_args[0], is_desc)
                 else:
-                    if not settings.DEBUG:
-                        # We should crash on invalid sort commands in DEV, but just ignore in PROD
-                        # noinspection PyProtectedMember
-                        valid_sort_fields = {x.name for x in self.model._meta.get_fields()}
-                        order_args = [order_arg for order_arg in order_args if order_arg.split('__', 1)[0] in valid_sort_fields]
                     order_args = ["%s%s" % (is_desc and '-' or '', x) for x in order_args]
                     self.data = self.data.order_by(*order_args)
 
