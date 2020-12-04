@@ -18,7 +18,6 @@ from typing import (
     Union,
 )
 
-from django.conf import settings
 from django.core.paginator import (
     InvalidPage,
     Paginator,
@@ -92,7 +91,7 @@ from tri_struct import (
 
 from tri_table.db_compat import setup_db_compat
 
-__version__ = '8.5.0'
+__version__ = '8.5.1'
 
 LAST = LAST
 

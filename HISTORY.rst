@@ -1,6 +1,14 @@
 Changelog
 ---------
 
+8.5.1 (2020-12-04)
+~~~~~~~~~~~~~~~~~~
+
+* Removed broken validation of sort columns. This validation prevented sorting on annotations which was very confusing as it worked in dev.
+
+* NOTE: tri.table is a legacy library and is fully replaced by iommi
+
+
 8.5.0 (2020-08-21)
 ~~~~~~~~~~~~~~~~~~
 
