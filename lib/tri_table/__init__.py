@@ -29,7 +29,7 @@ from django.http import (
     HttpResponseRedirect,
 )
 from django.utils.encoding import (
-    force_text,
+    force_str,
 )
 from django.utils.html import (
     conditional_escape,
@@ -342,7 +342,7 @@ class Column(RefinableObject):
     @staticmethod
     @refinable
     def display_name(table, column, **_):
-        return force_text(column.name).rsplit('__', 1)[-1].replace("_", " ").capitalize()
+        return force_str(column.name).rsplit('__', 1)[-1].replace("_", " ").capitalize()
 
     def _bind(self, table, index):
         bound_column = copy.copy(self)

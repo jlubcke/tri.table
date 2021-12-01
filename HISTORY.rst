@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+8.6.0 (----------)
+~~~~~~~~~~~~~~~~~~
+
+* Remove deprecated use of force_text in django
+
+
 8.5.1 (2020-12-04)
 ~~~~~~~~~~~~~~~~~~
 
