@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-8.6.0 (----------)
+8.6.0 (2021-12-01)
 ~~~~~~~~~~~~~~~~~~
 
 * Remove deprecated use of force_text in django

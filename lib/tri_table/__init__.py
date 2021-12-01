@@ -91,7 +91,7 @@ from tri_struct import (
 
 from tri_table.db_compat import setup_db_compat
 
-__version__ = '8.5.1'
+__version__ = '8.6.0'
 
 LAST = LAST
 
